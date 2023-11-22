@@ -61,10 +61,10 @@ variable "resources_app" {
     cpu    = 0.25
     memory = "0.5Gi"
   }
-  type = {
+  type = object({
     cpu    = number
     memory = string
-  }
+  })
 }
 
 variable "resources_db" {
@@ -73,8 +73,8 @@ variable "resources_db" {
     cpu    = 0.5
     memory = "1Gi"
   }
-  type = {
+  type = object({
     cpu    = number
     memory = string
-  }
+  })
 }
