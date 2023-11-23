@@ -114,13 +114,18 @@ jobs:
           PLAN_URL=$(grep https:\/\/.*\/.*\/runs\/run-.* ${{ env.PLAN_OUTPUT }})
           echo "::notice title=Terraform Plan::$PLAN_URL"
           echo "plan-url=$PLAN_URL" >> "$GITHUB_OUTPUT"
+      - name: Get approval check script
+        uses: actions/checkout@v4
+        with:
+          repository: pet-friend/terraform-microservice-module
+          sparse-checkout: deploy/check_plan_diff.sh
       - name: Check if the changes require approval
         id: check-changes
         shell: bash
         if: steps.terraform-plan.outputs.exitcode == 2
         env:
           PLAN_URL: ${{ steps.plan-url.outputs.plan-url }}
-        working-directory: .github/workflows
+        working-directory: deploy
         run: |
           RUN_ID=${PLAN_URL##*/} \
           TF_TOKEN=${{ secrets.tf-token }} \
