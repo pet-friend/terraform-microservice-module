@@ -47,7 +47,7 @@ env:
   PLAN_OUTPUT: /tmp/terraform-plan.out
   # Make sure to update the image name in TERRAFORM_VARS too
   IMAGE: >-
-    ${{ inputs.dockerhub-repo}}:${{ inputs.app-name }}-${{ github.sha }}
+    ${{ inputs.dockerhub-repo }}:${{ inputs.app-name }}-${{ github.sha }}
   TERRAFORM_VARS: |
     container_image = "${{ inputs.dockerhub-repo}}:${{ inputs.app-name }}-${{ github.sha }}"
 
@@ -118,14 +118,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: pet-friend/terraform-microservice-module
-          sparse-checkout: deploy/check_plan_diff.sh
+          sparse-checkout: .github/workflows/check_plan_diff.sh
       - name: Check if the changes require approval
         id: check-changes
         shell: bash
         if: steps.terraform-plan.outputs.exitcode == 2
         env:
           PLAN_URL: ${{ steps.plan-url.outputs.plan-url }}
-        working-directory: deploy
+        working-directory: .github/workflows
         run: |
           RUN_ID=${PLAN_URL##*/} \
           TF_TOKEN=${{ secrets.tf-token }} \

@@ -18,5 +18,5 @@ and a second Container App for a database with PostgreSQL.
   - `DATABASE_URL`: Async connection string for the PostgreSQL database.
   - `ENVIRONMENT`: The environment name (`PRODUCTION` or `DEVELOPMENT`).
 
-- GitHub Action to automatically deploy the microservice in the `deploy` folder. This
-  action also adds a Managed Certificate to the app.
+- GitHub Action to automatically deploy the microservice in the. This action also
+  adds a Managed Certificate to the app. Location: `.github/workflows/deploy.yml`
