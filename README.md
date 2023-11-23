@@ -14,5 +14,9 @@ and a second Container App for a database with PostgreSQL.
   Additionally, the environment will be appended unless it's `prd`.
 
 - Environment variables are set for the microservice to connect to the database:
+
   - `DATABASE_URL`: Async connection string for the PostgreSQL database.
   - `ENVIRONMENT`: The environment name (`PRODUCTION` or `DEVELOPMENT`).
+
+- GitHub Action to automatically deploy the microservice in the `deploy` folder. This
+  action also adds a Managed Certificate to the app.

@@ -1,0 +1,242 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: Name of the container app for the container images"
+        required: true
+        type: string
+      terraform-dir:
+        description: "Directory where the Terraform files are located"
+        required: true
+        type: string
+      env:
+        type: string
+        description: >-
+          Environment to deploy to. The file <terraform-dir>/<env>/cloud.tfbackend
+          must exist.
+        required: true
+      dockerhub-repo:
+        description: DockerHub repository to push the image to
+        required: true
+        type: string
+      dockerhub-user:
+        description: DockerHub rusername to push the image with
+        required: true
+        type: string
+      test-command:
+        description: Command to run to test the image
+        required: false
+        default: scripts/test.sh
+        type: string
+    secrets:
+      dockerhub-token:
+        description: DockerHub token to push the image with
+        required: true
+      tf-token:
+        description: Terraform token to authenticate with
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
+env:
+  PLAN_OUTPUT: /tmp/terraform-plan.out
+  # Make sure to update the image name in TERRAFORM_VARS too
+  IMAGE: >-
+    ${{ inputs.dockerhub-repo}}:${{ inputs.app-name }}-${{ github.sha }}
+  TERRAFORM_VARS: |
+    container_image = "${{ inputs.dockerhub-repo}}:${{ inputs.app-name }}-${{ github.sha }}"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ inputs.dockerhub-user }}
+          password: ${{ secrets.dockerhub-token }}
+      - name: Docker build
+        run: |
+          docker build -t ${{ env.IMAGE }} .
+      - name: Run tests
+        run: |
+          docker run -e "ENVIRONMENT=TESTING" -e "DATABASE_URL=" --entrypoint \
+            /bin/bash ${{ env.IMAGE }} ${{ inputs.test-command }}
+      - name: Docker push
+        run: |
+          docker push ${{ env.IMAGE }}
+          echo "::notice title=Docker image::${{ env.IMAGE }}"
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    outputs:
+      changes: ${{ steps.terraform-plan.outputs.exitcode == 2 }}
+      require-approval: ${{ steps.check-changes.outputs.require-approval }}
+      plan-url: ${{ steps.plan-url.outputs.plan-url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.tf-token }}
+      - name: Terraform Init
+        working-directory: ${{ inputs.terraform-dir}}
+        run: |
+          terraform init --backend-config ${{ inputs.env }}/cloud.tfbackend
+      - name: Terraform Plan
+        id: terraform-plan
+        working-directory: ${{ inputs.terraform-dir}}
+        run: |
+          set -o pipefail
+          echo '${{ env.TERRAFORM_VARS }}' >> terraform.auto.tfvars
+          terraform plan -compact-warnings -detailed-exitcode -no-color \
+            | tee ${{ env.PLAN_OUTPUT }}
+        continue-on-error: true
+      - name: Exit if failed
+        if: steps.terraform-plan.outputs.exitcode == 1
+        run: exit 1
+      - name: Show plan URL
+        id: plan-url
+        shell: bash
+        run: |
+          PLAN_URL=$(grep https:\/\/.*\/.*\/runs\/run-.* ${{ env.PLAN_OUTPUT }})
+          echo "::notice title=Terraform Plan::$PLAN_URL"
+          echo "plan-url=$PLAN_URL" >> "$GITHUB_OUTPUT"
+      - name: Check if the changes require approval
+        id: check-changes
+        shell: bash
+        if: steps.terraform-plan.outputs.exitcode == 2
+        env:
+          PLAN_URL: ${{ steps.plan-url.outputs.plan-url }}
+        working-directory: .github/workflows
+        run: |
+          RUN_ID=${PLAN_URL##*/} \
+          TF_TOKEN=${{ secrets.tf-token }} \
+          bash check_plan_diff.sh
+
+  terraform-apply:
+    name: Terraform Apply
+    needs:
+      - build
+      - terraform-plan
+    runs-on: ubuntu-latest
+    outputs:
+      container-app-name: ${{ steps.out.outputs.container-app-name }}
+      container-app-url: ${{ steps.out.outputs.container-app-url }}
+      resource-group-name: ${{ steps.out.outputs.resource-group-name }}
+      container-app-environment-name: ${{ steps.out.outputs.container-app-environment-name }}
+      client-id: ${{ steps.out.outputs.client-id }}
+      tenant-id: ${{ steps.out.outputs.tenant-id }}
+      subscription-id: ${{ steps.out.outputs.subscription-id }}
+    steps:
+      # Workaround to not having environments in GitHub Free
+      - uses: trstringer/manual-approval@v1
+        name: Approve Terraform Plan
+        # Require approval if there are changes other than the container image
+        if: >-
+          needs.terraform-plan.outputs.changes == 'true' &&
+          needs.terraform-plan.outputs.require-approval == 'true'
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: Approve Terraform Plan - ${{ inputs.env }}
+          issue-body: >
+            Please review the [Terraform Plan](${{ needs.terraform-plan.outputs.plan-url }})
+            for the ${{ inputs.env }} environment and approve it to start the deployment.
+          exclude-workflow-initiator-as-approver: false
+      - uses: actions/checkout@v4
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.tf-token }}
+      - name: Terraform Init
+        working-directory: ${{ inputs.terraform-dir}}
+        run: |
+          terraform init --backend-config ${{ inputs.env }}/cloud.tfbackend
+      - name: Terraform Apply
+        id: terraform-apply
+        working-directory: ${{ inputs.terraform-dir}}
+        if: needs.terraform-plan.outputs.changes == 'true'
+        run: |
+          set -o pipefail
+          echo '${{ env.TERRAFORM_VARS }}' >> terraform.auto.tfvars
+          terraform apply -auto-approve -no-color
+      - name: Exit if failed
+        if: needs.terraform-plan.outputs.changes == 'true'
+        run: exit ${{ steps.terraform-apply.outputs.exitcode }}
+      - name: Save outputs
+        id: out
+        working-directory: ${{ inputs.terraform-dir }}
+        run: |
+          terraform output -json | grep -Pzo "[\n^]{[\S\s]*}[\n$]" | jq -r 'to_entries | map("\(.key)=\(.value.value)") | .[]' >> "$GITHUB_OUTPUT"
+      - name: Show app url
+        run: |
+          echo "::notice title=App URL::${{ steps.out.outputs.container-app-url }}"
+
+  setup-cert:
+    # See https://github.com/microsoft/azure-container-apps/issues/607
+    name: Setup managed certificate
+    needs:
+      - build
+      - terraform-plan
+      - terraform-apply
+    runs-on: ubuntu-latest
+    if: >-
+      !cancelled() &&
+      needs.terraform-plan.result == 'success' && needs.build.result == 'success' &&
+      (needs.terraform-apply.result == 'success' || needs.terraform-apply.result == 'skipped')
+    env:
+      HOSTNAMES_FILE: hostnames.txt
+    steps:
+      - uses: azure/login@v1
+        name: Azure login
+        with:
+          client-id: ${{ needs.terraform-apply.outputs.client-id }}
+          tenant-id: ${{ needs.terraform-apply.outputs.tenant-id }}
+          subscription-id: ${{ needs.terraform-apply.outputs.subscription-id }}
+      - name: Get Container App current hostname
+        id: check-domain
+        run: |
+          az extension add --name containerapp --upgrade
+          az containerapp hostname list \
+            -n ${{ needs.terraform-apply.outputs.container-app-name }} \
+            -g ${{ needs.terraform-apply.outputs.resource-group-name }} \
+            --query "[].name" -o tsv >> ${{ env.HOSTNAMES_FILE }}
+
+          N_MATCHES=$(grep -c "${{ needs.terraform-apply.outputs.container-app-url }}" ${{ env.HOSTNAMES_FILE }})
+          NEW_HOSTNAME=$(if (( N_MATCHES == 0 )); then echo true; else echo false; fi)
+          echo "new-hostname=$NEW_HOSTNAME" >> "$GITHUB_OUTPUT"
+          echo $NEW_HOSTNAME
+      - name: Remove old hostnames
+        run: |
+          grep -v "${{ needs.terraform-apply.outputs.container-app-url  }}" ${{env.HOSTNAMES_FILE}} \
+            | xargs -r -L 1 az containerapp hostname delete --yes \
+              -n ${{ needs.terraform-apply.outputs.container-app-name }} \
+              -g ${{ needs.terraform-apply.outputs.resource-group-name }} \
+              --hostname
+      - name: Add custom domain and certificate
+        if: steps.check-domain.outputs.new-hostname == 'true'
+        run: |
+          az containerapp hostname add \
+            --hostname ${{ needs.terraform-apply.outputs.container-app-url }} \
+            -n ${{ needs.terraform-apply.outputs.container-app-name }} \
+            -g ${{ needs.terraform-apply.outputs.resource-group-name }}
+          az containerapp hostname bind \
+            --hostname ${{ needs.terraform-apply.outputs.container-app-url }} \
+            --environment ${{ needs.terraform-apply.outputs.container-app-environment-name }} \
+            -n ${{ needs.terraform-apply.outputs.container-app-name }} \
+            -g ${{ needs.terraform-apply.outputs.resource-group-name }} \
+            --validation-method CNAME
