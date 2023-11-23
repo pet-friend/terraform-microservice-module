@@ -28,7 +28,7 @@ on:
       test-command:
         description: Command to run to test the image
         required: false
-        default: scripts/test.sh
+        default: scripts/tests.sh
         type: string
     secrets:
       dockerhub-token:
