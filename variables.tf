@@ -7,7 +7,7 @@ variable "app_name" {
 
 variable "container_image" {
   description = "Container image to deploy for the application"
-  default     = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+  default     = "mcr.microsoft.com/k8se/quickstart:latest"
   type        = string
 }
 
@@ -20,6 +20,14 @@ variable "container_port" {
 variable "env" {
   description = "Environment, used in the resource names"
   type        = string
+}
+
+# Database settings
+
+variable "db_allow_external" {
+  type        = bool
+  description = "Allow external connections to the database. Requires the CAE to use a VNET"
+  default     = false
 }
 
 # DNS Settings

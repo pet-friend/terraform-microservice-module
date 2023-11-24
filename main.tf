@@ -81,9 +81,10 @@ resource "azapi_resource" "db" {
       configuration = {
         activeRevisionsMode = "Single"
         ingress = {
+          # See https://github.com/microsoft/azure-container-apps/issues/375
           transport  = "tcp"
-          targetPort = local.db_port
-          external   = true
+          targetPort = local.db_port # where the app is listening
+          external   = var.db_allow_external
           traffic = [
             {
               weight         = 100
