@@ -33,6 +33,7 @@ resource "azurerm_dns_txt_record" "txt_record_app" {
 # Database DNS records
 
 resource "azurerm_dns_cname_record" "cname_record_db" {
+  count               = var.db_allow_external ? 1 : 0
   name                = "${var.subdomain}-db${local.env_subdomain_suffix}"
   zone_name           = data.azurerm_dns_zone.dns.name
   resource_group_name = data.azurerm_dns_zone.dns.resource_group_name
@@ -41,6 +42,7 @@ resource "azurerm_dns_cname_record" "cname_record_db" {
 }
 
 resource "azurerm_dns_txt_record" "txt_record_db" {
+  count               = var.db_allow_external ? 1 : 0
   name                = "asuid.${azurerm_dns_cname_record.cname_record_db.name}"
   zone_name           = data.azurerm_dns_zone.dns.name
   resource_group_name = data.azurerm_dns_zone.dns.resource_group_name

@@ -9,7 +9,7 @@ and a second Container App for a database with PostgreSQL.
 - CNAME DNS records are created for the microservice and the database:
 
   - `<subdomain>` for the app
-  - `<subdomain>-db` for the database
+  - `<subdomain>-db` for the database (only if `db_allow_external` is true)
 
   Additionally, the environment will be appended unless it's `prd`.
 
