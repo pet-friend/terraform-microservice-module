@@ -141,7 +141,7 @@ jobs:
       container-app-name: ${{ steps.out.outputs.container_app_name }}
       container-app-url: ${{ steps.out.outputs.container_app_url }}
       resource-group-name: ${{ steps.out.outputs.resource_group_name }}
-      container-app-environment-name: ${{ steps.out.outputs.container_app_enviuornment_name }}
+      container-app-environment-name: ${{ steps.out.outputs.container_app_environment_name }}
       client-id: ${{ steps.out.outputs.client_id }}
       tenant-id: ${{ steps.out.outputs.tenant_id }}
       subscription-id: ${{ steps.out.outputs.subscription_id }}
