@@ -138,13 +138,13 @@ jobs:
       - terraform-plan
     runs-on: ubuntu-latest
     outputs:
-      container-app-name: ${{ steps.out.outputs.container-app-name }}
-      container-app-url: ${{ steps.out.outputs.container-app-url }}
-      resource-group-name: ${{ steps.out.outputs.resource-group-name }}
-      container-app-environment-name: ${{ steps.out.outputs.container-app-environment-name }}
-      client-id: ${{ steps.out.outputs.client-id }}
-      tenant-id: ${{ steps.out.outputs.tenant-id }}
-      subscription-id: ${{ steps.out.outputs.subscription-id }}
+      container-app-name: ${{ steps.out.outputs.container_app_name }}
+      container-app-url: ${{ steps.out.outputs.container_app_url }}
+      resource-group-name: ${{ steps.out.outputs.resource_group_name }}
+      container-app-environment-name: ${{ steps.out.outputs.container_app_enviuornment_name }}
+      client-id: ${{ steps.out.outputs.client_id }}
+      tenant-id: ${{ steps.out.outputs.tenant_id }}
+      subscription-id: ${{ steps.out.outputs.subscription_id }}
     steps:
       # Workaround to not having environments in GitHub Free
       - uses: trstringer/manual-approval@v1
