@@ -221,7 +221,7 @@ jobs:
             -g ${{ needs.terraform-apply.outputs.resource-group-name }} \
             --query "[].name" -o tsv >> ${{ env.HOSTNAMES_FILE }}
 
-          N_MATCHES=$(grep -c "${{ needs.terraform-apply.outputs.container-app-url }}" ${{ env.HOSTNAMES_FILE }})
+          N_MATCHES=$(grep -c "${{ needs.terraform-apply.outputs.container-app-url }}" ${{ env.HOSTNAMES_FILE }} || true)
           NEW_HOSTNAME=$(if (( N_MATCHES == 0 )); then echo true; else echo false; fi)
           echo "new-hostname=$NEW_HOSTNAME" >> "$GITHUB_OUTPUT"
           echo $NEW_HOSTNAME
