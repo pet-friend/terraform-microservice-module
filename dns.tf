@@ -43,7 +43,7 @@ resource "azurerm_dns_cname_record" "cname_record_db" {
 
 resource "azurerm_dns_txt_record" "txt_record_db" {
   count               = var.db_allow_external ? 1 : 0
-  name                = "asuid.${azurerm_dns_cname_record.cname_record_db.name}"
+  name                = "asuid.${azurerm_dns_cname_record.cname_record_db[0].name}"
   zone_name           = data.azurerm_dns_zone.dns.name
   resource_group_name = data.azurerm_dns_zone.dns.resource_group_name
   ttl                 = 3600
