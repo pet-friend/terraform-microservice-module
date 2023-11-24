@@ -38,7 +38,7 @@ resource "azurerm_dns_cname_record" "cname_record_db" {
   zone_name           = data.azurerm_dns_zone.dns.name
   resource_group_name = data.azurerm_dns_zone.dns.resource_group_name
   ttl                 = 3600
-  record              = jsondecode(azapi_resource.db.output).properties.configuration.ingress.fqdn
+  record              = local.db_fqdn
 }
 
 resource "azurerm_dns_txt_record" "txt_record_db" {

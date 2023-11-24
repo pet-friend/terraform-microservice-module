@@ -16,7 +16,7 @@ locals {
 
   db_connection_string = "postgresql+asyncpg://${local.db_username}:${local.db_password}@${local.db_container_name}:${local.db_port}/${local.db_name}"
 
-  dns_verification_id = jsondecode(data.azapi_resource.app_verification_id.output).properties.customDomainConfiguration.customDomainVerificationId
-
+  dns_verification_id  = jsondecode(data.azapi_resource.app_verification_id.output).properties.customDomainConfiguration.customDomainVerificationId
+  db_fqdn              = jsondecode(azapi_resource.db.output).properties.configuration.ingress.fqdn
   env_subdomain_suffix = var.env == "prd" ? "" : "-${var.env}"
 }

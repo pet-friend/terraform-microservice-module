@@ -18,7 +18,7 @@ output "db_connection_details" {
   sensitive   = true
   value = {
     external_enabled = var.db_allow_external
-    default_url      = azurerm_dns_cname_record.cname_record_db[0].record
+    default_url      = local.db_fqdn
     url              = var.db_allow_external ? "${azurerm_dns_cname_record.cname_record_db[0].name}.${data.azurerm_dns_zone.dns.name}" : null
     port             = local.db_port
     username         = local.db_username
