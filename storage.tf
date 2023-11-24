@@ -4,6 +4,7 @@ resource "azurerm_storage_account" "storage_account" {
   location                 = data.azurerm_container_app_environment.app_env.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
+  account_kind             = "StorageV2"
 }
 
 resource "azurerm_storage_share" "file_share" {

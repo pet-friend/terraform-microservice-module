@@ -4,12 +4,13 @@ resource "random_password" "db_password" {
 }
 
 locals {
-  db_password    = random_password.db_password.result
-  db_username    = "postgres"
-  db_name        = lower(var.app_name)
-  db_port        = 5432
-  db_mount_path  = "/app/db_volume"
-  db_volume_name = "db-volume"
+  db_password        = random_password.db_password.result
+  db_username        = "postgres"
+  db_name            = lower(var.app_name)
+  db_port            = 5432
+  db_mount_path      = "/app/db_volume"
+  db_volume_name     = "db-volume"
+  db_storage_subpath = "db"
 
   app_container_name = "${lower(var.env)}-${lower(var.app_name)}-app-ca"
   db_container_name  = "${lower(var.env)}-${lower(var.app_name)}-db-ca"

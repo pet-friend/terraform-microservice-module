@@ -123,7 +123,7 @@ resource "azapi_resource" "db" {
               {
                 volumeName = local.db_volume_name
                 mountPath  = local.db_mount_path
-                subPath    = "data"
+                subPath    = local.db_storage_subpath
               }
             ]
           }
