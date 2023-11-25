@@ -74,7 +74,7 @@ jobs:
         if: inputs.pre-deploy-command != ''
         run: |
           docker run -e "ENVIRONMENT=TESTING" -e "DATABASE_URL=" --entrypoint \
-            /bin/bash ${{ env.IMAGE }} ${{ inputs.pre-deploy-command }}
+            /bin/bash ${{ env.IMAGE }} -c '${{ inputs.pre-deploy-command }}'
       - name: Docker push
         run: |
           docker push ${{ env.IMAGE }}
