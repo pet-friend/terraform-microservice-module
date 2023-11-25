@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       app-name:
-        description: Name of the container app for the container images"
+        description: Name of the container app for the container images.
         required: true
         type: string
       terraform-dir:
-        description: "Directory where the Terraform files are located"
+        description: Directory where the Terraform files are located.
         required: true
         type: string
       env:
@@ -18,24 +18,25 @@ on:
           must exist.
         required: true
       dockerhub-repo:
-        description: DockerHub repository to push the image to
+        description: DockerHub repository to push the image to.
         required: true
         type: string
       dockerhub-user:
-        description: DockerHub rusername to push the image with
+        description: DockerHub rusername to push the image with.
         required: true
         type: string
-      test-command:
-        description: Command to run to test the image
+      pre-deploy-command:
+        description: >-
+          Command to run within the container before deploying. 
+          If it fails, the deployment is cancelled.
         required: false
-        default: scripts/tests.sh
         type: string
     secrets:
       dockerhub-token:
-        description: DockerHub token to push the image with
+        description: DockerHub token to push the image with.
         required: true
       tf-token:
-        description: Terraform token to authenticate with
+        description: Terraform token to authenticate with.
         required: true
 
 permissions:
@@ -70,9 +71,10 @@ jobs:
         run: |
           docker build -t ${{ env.IMAGE }} .
       - name: Run tests
+        if: inputs.pre-deploy-command != ''
         run: |
           docker run -e "ENVIRONMENT=TESTING" -e "DATABASE_URL=" --entrypoint \
-            /bin/bash ${{ env.IMAGE }} ${{ inputs.test-command }}
+            /bin/bash ${{ env.IMAGE }} ${{ inputs.pre-deploy-command }}
       - name: Docker push
         run: |
           docker push ${{ env.IMAGE }}
