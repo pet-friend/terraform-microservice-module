@@ -70,7 +70,7 @@ jobs:
       - name: Docker build
         run: |
           docker build -t ${{ env.IMAGE }} .
-      - name: Run tests
+      - name: Run pre-deploy check
         if: inputs.pre-deploy-command != ''
         run: |
           docker run -e "ENVIRONMENT=TESTING" -e "DATABASE_URL=" --entrypoint \
