@@ -51,6 +51,7 @@ env:
     ${{ inputs.dockerhub-repo }}:${{ inputs.app-name }}-${{ github.sha }}
   TERRAFORM_VARS: |
     container_image = "${{ inputs.dockerhub-repo}}:${{ inputs.app-name }}-${{ github.sha }}"
+    app_name = "${{ inputs.app-name }}"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
