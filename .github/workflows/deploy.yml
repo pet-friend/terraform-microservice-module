@@ -191,7 +191,7 @@ jobs:
           terraform output -json | grep -Pzo "[\n^]{[\S\s]*}[\n$]" | jq -r 'to_entries | map("\(.key)=\(.value.value)") | .[]' >> "$GITHUB_OUTPUT"
       - name: Show app url
         run: |
-          echo "::notice title=App URL::${{ steps.out.outputs.container-app-url }}"
+          echo "::notice title=App URL::${{ steps.out.outputs.container_app_url }}"
 
   setup-cert:
     # See https://github.com/microsoft/azure-container-apps/issues/607
