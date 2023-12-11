@@ -43,6 +43,11 @@ resource "azurerm_container_app" "app" {
         value = var.env == "prd" ? "PRODUCTION" : "DEVELOPMENT"
       }
 
+      env {
+        name  = "STORAGE_CONNECTION_STRING"
+        value = azurerm_storage_account.storage_account.primary_connection_string
+      }
+
       dynamic "env" {
         for_each = var.environment_variables
         content {
