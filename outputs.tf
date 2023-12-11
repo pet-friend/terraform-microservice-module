@@ -26,3 +26,8 @@ output "db_connection_details" {
     database         = local.db_name
   }
 }
+
+output "storage_account" {
+  description = "Storage account object"
+  value       = azurerm_storage_account.storage_account
+}
