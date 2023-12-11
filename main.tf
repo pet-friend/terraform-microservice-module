@@ -42,6 +42,14 @@ resource "azurerm_container_app" "app" {
         name  = "ENVIRONMENT"
         value = var.env == "prd" ? "PRODUCTION" : "DEVELOPMENT"
       }
+
+      dynamic "env" {
+        for_each = var.environment_variables
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
     }
 
     min_replicas = 0

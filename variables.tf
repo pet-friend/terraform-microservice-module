@@ -22,6 +22,12 @@ variable "env" {
   type        = string
 }
 
+variable "environment_variables" {
+  description = "Environment variables to set in the container"
+  default     = {}
+  type        = map(string)
+}
+
 # Database settings
 
 variable "db_allow_external" {
