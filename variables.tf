@@ -85,7 +85,7 @@ variable "resources_db" {
   description = "vCPU and Memory counts for the database"
   default = {
     cpu    = 0.25
-    memory = "0.75Gi"
+    memory = "0.5Gi"
   }
   type = object({
     cpu    = number
