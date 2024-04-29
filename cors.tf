@@ -1,5 +1,5 @@
 resource "azapi_update_resource" "set_cors" {
-  type        = "Microsoft.App/containerApps@2023-05-01"
+  type        = "Microsoft.App/containerApps@2023-11-02-preview"
   resource_id = azurerm_container_app.app.id
 
   body = jsonencode({
@@ -7,13 +7,13 @@ resource "azapi_update_resource" "set_cors" {
       configuration = {
         ingress = {
           corsPolicy = var.env == "prd" ? {
-            allowOrigins   = [local.admin_dashoard_url]
+            allowedOrigins = [local.admin_dashoard_url]
             allowedMethods = ["*"]
-            allowHeaders   = ["*"]
+            allowedHeaders = ["*"]
             } : {
-            allowOrigins   = ["*"]
+            allowedOrigins = ["*"]
             allowedMethods = ["*"]
-            allowHeaders   = ["*"]
+            allowedHeaders = ["*"]
           }
         }
       }
