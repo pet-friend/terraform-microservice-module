@@ -28,6 +28,12 @@ variable "environment_variables" {
   type        = map(string)
 }
 
+variable "admin_dashboard_subdomain" {
+  description = "Subdomain for the admin dashboard, to be used in the CORS policy of production deployments"
+  type        = string
+  default     = "admin"
+}
+
 # Database settings
 
 variable "db_allow_external" {

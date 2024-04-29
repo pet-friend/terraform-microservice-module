@@ -20,4 +20,6 @@ locals {
   dns_verification_id  = jsondecode(data.azapi_resource.app_verification_id.output).properties.customDomainConfiguration.customDomainVerificationId
   db_fqdn              = jsondecode(azapi_resource.db.output).properties.configuration.ingress.fqdn
   env_subdomain_suffix = var.env == "prd" ? "" : "-${var.env}"
+
+  admin_dashoard_url = "https://${var.admin_dashboard_subdomain}.${var.dns_zone}"
 }
