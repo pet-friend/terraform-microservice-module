@@ -3,6 +3,7 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>3.81.0"
+      configuration_aliases = [ azurerm, azurerm.dns_sub ]
     }
     azapi = {
       source  = "azure/azapi"
