@@ -1,5 +1,5 @@
 resource "azurerm_storage_account" "storage_account" {
-  name                     = "${lower(var.env)}${replace(lower(var.app_name), "-", "")}sa"
+  name                     = "${lower(var.env)}${var.env == "prd" ? "petfriend" : ""}${replace(lower(var.app_name), "-", "")}sa"
   resource_group_name      = data.azurerm_container_app_environment.app_env.resource_group_name
   location                 = data.azurerm_container_app_environment.app_env.location
   account_tier             = "Standard"
